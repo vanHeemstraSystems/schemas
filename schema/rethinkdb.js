@@ -1,13 +1,54 @@
 
 // TO DO: rearrange below code into our standard pattern for RethinkDB Object
 
+// var arrayPrefix = "__array"   // REMOVE, not set as property
+// module.exports.arrayPrefix = arrayPrefix;  // REMOVE, not set as property
 
-var arrayPrefix = "__array"
-module.exports.arrayPrefix = arrayPrefix;
+// var util = require(__dirname+'/util.js'); // REMOVE, not set as property
+//var type = require(__dirname+'/type/index.js'); // REMOVE, not set as property
+//var Errors = require(__dirname+'/errors.js'); // REMOVE, not set as property
 
-var util = require(__dirname+'/util.js');
-var type = require(__dirname+'/type/index.js');
-var Errors = require(__dirname+'/errors.js');
+var self = this; // set the context locally, for access protection
+
+/**
+ * Create a new RethinkDB that let users create sub-rethinkdb.
+ * @return {RethinkDB}
+ */
+function RethinkDB() {
+  console.log('schemas schema rethinkdb - RethinkDB called'); 
+  // add key value pairs here
+  // self's are not directly publicly accessible, only through their public method(s)
+  // use self's here for protection from direct access
+  self._error = {};  // will be set, before passing on to mapping  
+  self._type = {}; // will be set, before passing on to mapping
+  self._utility = {};   // will be set, before passing on to mapping
+  self._arrayPrefix = "__array";  
+}
+
+RethinkDB.prototype.error = function() {
+  return self._error;
+}
+
+RethinkDB.prototype.seterror = function(fnOrValue) {
+  self._error = fnOrValue;
+}
+
+RethinkDB.prototype.type = function() {
+  return self._type;
+}
+
+RethinkDB.prototype.settype = function(fnOrValue) {
+  self._type = fnOrValue;
+}
+
+RethinkDB.prototype.utility = function() {
+  return self._utility;
+}
+
+RethinkDB.prototype.setutility = function(fnOrValue) {
+  self._utility = fnOrValue;
+}
+
 
 
 function generateVirtual(doc, defaultField, originalDoc, virtual) {
