@@ -1,12 +1,12 @@
 
 // TO DO: rearrange below code into our standard pattern for RethinkDB Object
 
-// var arrayPrefix = "__array"   // REMOVE, not set as property
-// module.exports.arrayPrefix = arrayPrefix;  // REMOVE, not set as property
+// var arrayPrefix = "__array"   // REMOVE, now set as property
+// module.exports.arrayPrefix = arrayPrefix;  // REMOVE, now set as property
 
-// var util = require(__dirname+'/util.js'); // REMOVE, not set as property
-//var type = require(__dirname+'/type/index.js'); // REMOVE, not set as property
-//var Errors = require(__dirname+'/errors.js'); // REMOVE, not set as property
+// var util = require(__dirname+'/util.js'); // REMOVE, now set as property
+//var type = require(__dirname+'/type/index.js'); // REMOVE, now set as property
+//var Errors = require(__dirname+'/errors.js'); // REMOVE, now set as property
 
 var self = this; // set the context locally, for access protection
 
@@ -49,9 +49,11 @@ RethinkDB.prototype.setutility = function(fnOrValue) {
   self._utility = fnOrValue;
 }
 
+RethinkDB.prototype.arrayPrefix = function() {
+  return self._arrayPrefix;
+}
 
-
-function generateVirtual(doc, defaultField, originalDoc, virtual) {
+RethinkDB.prototype.generateVirtual = function(doc, defaultField, originalDoc, virtual) {
   var path = defaultField.path;
   var value = defaultField.value;
   var field = doc;
@@ -67,7 +69,8 @@ function generateVirtual(doc, defaultField, originalDoc, virtual) {
       virtualValue = undefined;
     }
 
-    if (path[j] === arrayPrefix) {
+    //ORIGINAL if (path[j] === arrayPrefix) {
+    if (path[j] === self.arrayPrefix()) {
       if (!Array.isArray(field)) {
         // This is caught by validate, except if there is an `enforce_type: "none"`.
         return;
@@ -111,17 +114,17 @@ function generateVirtual(doc, defaultField, originalDoc, virtual) {
   }
   return doc;
 }
+//module.exports.generateVirtual = generateVirtual; // replaced
 
-module.exports.generateVirtual = generateVirtual;
-
-function generateDefault(doc, defaultField, originalDoc) {
+RethinkDB.prototype.generateDefault = function(doc, defaultField, originalDoc) {
   var path = defaultField.path;
   var value = defaultField.value;
   var field = doc;
 
   var keepGoing = true;
   for(var j=0; j<path.length-1; j++) {
-    if (path[j] === arrayPrefix) {
+    //ORIGINAL if (path[j] === arrayPrefix) {
+    if (path[j] === self.arrayPrefix()) {
       if (!Array.isArray(field)) {
         // This is caught by validate, except if there is an `enforce_type: "none"`.
         return;
@@ -156,10 +159,9 @@ function generateDefault(doc, defaultField, originalDoc) {
   }
   return doc;
 }
+//module.exports.generateDefault = generateDefault; // replaced
 
-module.exports.generateDefault = generateDefault;
-
-function parse(schema, prefix, options, model) {
+RethinkDB.prototype.parse = function(schema, prefix, options, model) {
   var result;
 
   if ((prefix === '') && (type.isObject(schema) === false) && (util.isPlainObject(schema) === false)) {
@@ -329,23 +331,22 @@ function parse(schema, prefix, options, model) {
     throw new Errors.ValidationError("The value must be `String`/`Number`/`Boolean`/`Date`/`Buffer`/`Object`/`Array`/`'virtual'`/`'Point'` for "+prefix);
   }
 }
-module.exports.parse = parse;
+//module.exports.parse = parse;  // replaced
 
 // The schema doesn't contain joined docs
-function validate(doc, schema, prefix, options) {
+RethinkDB.prototype.validate = function(doc, schema, prefix, options) {
   schema.validate(doc, prefix, options);
 }
-module.exports.validate = validate;
+//module.exports.validate = validate; // replaced
 
-function getType(schema) {
+RethinkDB.prototype.getType = function(schema) {
   if (util.isPlainObject(schema) && (schema._type !== undefined)) {
     return schema._type;
   }
   return schema;
 }
 
-
-function validateEnum(doc, schema, prefix) {
+RethinkDB.prototype.validateEnum = function(doc, schema, prefix) {
   if (Array.isArray(schema.enum) && (schema._enum[doc] !== true)) {
     var validValues = Object.keys(schema._enum);
     var message = "The field "+prefix+" must be one of these values: "
@@ -369,8 +370,9 @@ function validateEnum(doc, schema, prefix) {
     throw new Errors.ValidationError(message);
   }
 }
+
 // Check that schema is a valid object first
-function validateCustomizedValidator(doc, schema, prefix) {
+RethinkDB.prototype.validateCustomizedValidator = function(doc, schema, prefix) {
   if (typeof schema.validator === 'function') {
     if (schema.validator(doc) === false) {
       throw new Errors.ValidationErrors.ValidationError("Validator for the field "+prefix+" returned `false`.");
@@ -378,7 +380,7 @@ function validateCustomizedValidator(doc, schema, prefix) {
   }
 }
 
-function validateString(doc, schema, prefix, options) {
+RethinkDB.prototype.validateString = function(doc, schema, prefix, options) {
   if (validateNotNullUndefined(doc, prefix, "string", options)) return;
 
   if (typeof doc !== "string") { // doc is not null/undefined
@@ -396,7 +398,7 @@ function validateString(doc, schema, prefix, options) {
   }
 }
 
-function validateNumber(doc, schema, prefix, options) {
+RethinkDB.prototype.validateNumber = function(doc, schema, prefix, options) {
   if (validateNotNullUndefined(doc, prefix, "number", options)) return;
 
   if (typeof doc !== "number") { // doc is not null/undefined
@@ -415,7 +417,7 @@ function validateNumber(doc, schema, prefix, options) {
 
 }
 
-function validateBoolean(doc, schema, prefix, options) {
+RethinkDB.prototype.validateBoolean = function(doc, schema, prefix, options) {
   if (validateNotNullUndefined(doc, prefix, "boolean", options)) return;
 
   if (typeof doc !== "boolean") { // doc is not null/undefined
@@ -433,7 +435,7 @@ function validateBoolean(doc, schema, prefix, options) {
   }
 }
 
-function validateDate(doc, schema, prefix, options) {
+RethinkDB.prototype.validateDate = function(doc, schema, prefix, options) {
   if (validateNotNullUndefined(doc, prefix, "date", options)) return;
 
   if (options.enforce_type !== "none") {
@@ -475,7 +477,7 @@ function validateDate(doc, schema, prefix, options) {
   }
 }
 
-function validatePoint(doc, schema, prefix, options) {
+RethinkDB.prototype.validatePoint = function(doc, schema, prefix, options) {
   if (validateNotNullUndefined(doc, prefix, "point", options)) return;
 
   if (options.enforce_type !== "none") {
@@ -520,7 +522,7 @@ function validatePoint(doc, schema, prefix, options) {
   }
 }
 
-function validateBuffer(doc, schema, prefix, options) {
+RethinkDB.prototype.validateBuffer = function(doc, schema, prefix, options) {
   if (validateNotNullUndefined(doc, prefix, "buffer", options)) return;
 
   if (util.isPlainObject(doc) && (doc["$reql_type$"] === "BINARY")) {
@@ -545,3 +547,5 @@ function validateBuffer(doc, schema, prefix, options) {
     validateCustomizedValidator(doc, schema, prefix);
   }
 }
+
+module.exports = RethinkDB;
