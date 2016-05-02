@@ -13,7 +13,7 @@ function Schemas() { }
  * Create a new SchemasSchema object.
  * @return {SchemasSchema}
  */
-Schemas.prototype.type = function() {
+Schemas.prototype.schema = function() {
   return new SchemasSchema();
 }
 
